@@ -365,6 +365,23 @@ where
             DecoderImpl::None(_) => Some(Duration::default()),
         }
     }
+
+    #[inline]
+    fn seek(&mut self, time: Duration) -> Result<Duration, ()> {
+        match &mut self.0 {
+            #[cfg(all(feature = "wav", not(feature = "symphonia-wav")))]
+            DecoderImpl::Wav(source) => source.seek(time),
+            #[cfg(feature = "vorbis")]
+            DecoderImpl::Vorbis(source) => source.seek(time),
+            #[cfg(all(feature = "flac", not(feature = "symphonia-flac")))]
+            DecoderImpl::Flac(source) => source.seek(time),
+            #[cfg(all(feature = "mp3", not(feature = "symphonia-mp3")))]
+            DecoderImpl::Mp3(source) => source.seek(time),
+            #[cfg(feature = "symphonia")]
+            DecoderImpl::Symphonia(source) => source.seek(time),
+            DecoderImpl::None(_) => Ok(time),
+        }
+    }
 }
 
 impl<R> Iterator for LoopedDecoder<R>
@@ -402,12 +419,11 @@ where
                 }
                 #[cfg(all(feature = "vorbis", not(feature = "symphonia-vorbis")))]
                 DecoderImpl::Vorbis(source) => {
-                    use lewton::inside_ogg::OggStreamReader;
-                    let mut reader = source.into_inner().into_inner();
+                    use lewton::inside_ogg::SeekableOggStreamReader;
+                    let mut reader = source.into_inner().into_inner().into_inner();
                     reader.seek_bytes(SeekFrom::Start(0)).ok()?;
-                    let mut source = vorbis::VorbisDecoder::from_stream_reader(
-                        OggStreamReader::from_ogg_reader(reader).ok()?,
-                    );
+                    let stream_reader = SeekableOggStreamReader::new(reader.into_inner()).ok()?;
+                    let mut source = vorbis::VorbisDecoder::from_stream_reader(stream_reader);
                     let sample = source.next();
                     (DecoderImpl::Vorbis(source), sample)
                 }
@@ -518,6 +534,23 @@ where
     #[inline]
     fn total_duration(&self) -> Option<Duration> {
         None
+    }
+
+    #[inline]
+    fn seek(&mut self, time: Duration) -> Result<Duration, ()> {
+        match &mut self.0 {
+            #[cfg(all(feature = "wav", not(feature = "symphonia-wav")))]
+            DecoderImpl::Wav(source) => source.seek(time),
+            #[cfg(feature = "vorbis")]
+            DecoderImpl::Vorbis(source) => source.seek(time),
+            #[cfg(all(feature = "flac", not(feature = "symphonia-flac")))]
+            DecoderImpl::Flac(source) => source.seek(time),
+            #[cfg(all(feature = "mp3", not(feature = "symphonia-mp3")))]
+            DecoderImpl::Mp3(source) => source.seek(time),
+            #[cfg(feature = "symphonia")]
+            DecoderImpl::Symphonia(source) => source.seek(time),
+            DecoderImpl::None(_) => Ok(time),
+        }
     }
 }
 

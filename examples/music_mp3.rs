@@ -1,4 +1,6 @@
-use std::io::BufReader;
+use std::{io::BufReader, thread, time::Duration};
+
+use rodio::Source;
 
 fn main() {
     let (_stream, handle) = rodio::OutputStream::try_default().unwrap();
@@ -8,4 +10,5 @@ fn main() {
     sink.append(rodio::Decoder::new(BufReader::new(file)).unwrap());
 
     sink.sleep_until_end();
+    // thread::sleep(Duration::from_millis(1));
 }

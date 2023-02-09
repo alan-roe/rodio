@@ -103,4 +103,8 @@ where
             None
         }
     }
+
+    fn seek(&mut self, time: Duration) -> Result<Duration, ()> {
+        self.input.seek(time)
+    }
 }

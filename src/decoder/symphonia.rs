@@ -4,11 +4,11 @@ use symphonia::{
         audio::{AudioBufferRef, SampleBuffer, SignalSpec},
         codecs::{Decoder, DecoderOptions},
         errors::Error,
-        formats::{FormatOptions, FormatReader},
+        formats::{FormatOptions, FormatReader, SeekMode, SeekTo},
         io::MediaSourceStream,
         meta::MetadataOptions,
         probe::Hint,
-        units,
+        units::{self, Time, TimeBase},
     },
     default::get_probe,
 };
@@ -138,6 +138,28 @@ impl Source for SymphoniaDecoder {
     #[inline]
     fn total_duration(&self) -> Option<Duration> {
         None
+    }
+
+    #[inline]
+    fn seek(&mut self, time: Duration) -> Result<Duration, ()> {
+        let nanos_per_sec = 1_000_000_000.0;
+        match self.format.seek(
+            SeekMode::Coarse,
+            SeekTo::Time {
+                time: Time::new(time.as_secs(), time.subsec_nanos() as f64 / nanos_per_sec),
+                track_id: None,
+            },
+        ) {
+            Ok(seeked_to) => {
+                let base = TimeBase::new(1, self.sample_rate());
+                let time = base.calc_time(seeked_to.actual_ts);
+
+                Ok(Duration::from_millis(
+                    time.seconds * 1000 + ((time.frac * 60. * 1000.).round() as u64),
+                ))
+            }
+            Err(_) => return Err(()),
+        }
     }
 }
 

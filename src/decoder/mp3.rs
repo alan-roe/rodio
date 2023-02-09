@@ -59,6 +59,11 @@ where
     fn total_duration(&self) -> Option<Duration> {
         None
     }
+
+    #[inline]
+    fn seek(&mut self, _: Duration) -> Result<Duration, ()> {
+        Err(())
+    }
 }
 
 impl<R> Iterator for Mp3Decoder<R>
