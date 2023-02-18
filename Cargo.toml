@@ -1,16 +1,14 @@
 [package]
 name = "rodio"
-version = "0.16.0"
-authors = ["Pierre Krieger <pierre.krieger1708@gmail.com>"]
+version = "0.17.0"
+license = "MIT OR Apache-2.0"
 description = "Audio playback library"
 documentation = "http://docs.rs/rodio"
 exclude = ["assets/**", "tests/**"]
-edition = "2018"
-keywords = ["audio", "playback", "gamedev"]
-license = "MIT OR Apache-2.0"
+edition = "2021"
 
 [dependencies]
-cpal = "0.14.2"
+cpal = "0.15"
 claxon = { version = "0.4.2", optional = true }
 hound = { version = "3.3.1", optional = true }
 lewton = { version = "0.10", optional = true }

@@ -8,6 +8,7 @@ use std::{
 
 use crate::stream::{OutputStreamHandle, PlayError};
 use crate::{queue, source::Done, Sample, Source};
+use cpal::FromSample;
 
 /// Handle to an device that outputs sounds.
 ///
@@ -68,9 +69,17 @@ impl Sink {
     pub fn append<S>(&self, source: S)
     where
         S: Source + Send + 'static,
-        S::Item: Sample,
-        S::Item: Send,
+        f32: FromSample<S::Item>,
+        S::Item: Sample + Send,
     {
+        // Wait for queue to flush then resume stopped playback
+        if self.controls.stopped.load(Ordering::SeqCst) {
+            if self.sound_count.load(Ordering::SeqCst) > 0 {
+                self.sleep_until_end();
+            }
+            self.controls.stopped.store(false, Ordering::SeqCst);
+        }
+
         let controls = self.controls.clone();
 
         let source = source
@@ -236,6 +245,7 @@ impl Drop for Sink {
 mod tests {
     use crate::buffer::SamplesBuffer;
     use crate::{Sink, Source};
+    use std::sync::atomic::Ordering;
 
     #[test]
     fn test_pause_and_stop() {
@@ -266,6 +276,34 @@ mod tests {
         assert_eq!(queue_rx.next(), Some(0.0));
 
         assert!(sink.empty());
+    }
+
+    #[test]
+    fn test_stop_and_start() {
+        let (sink, mut queue_rx) = Sink::new_idle();
+
+        let v = vec![10i16, -10, 20, -20, 30, -30];
+
+        sink.append(SamplesBuffer::new(1, 1, v.clone()));
+        let mut src = SamplesBuffer::new(1, 1, v.clone()).convert_samples();
+
+        assert_eq!(queue_rx.next(), src.next());
+        assert_eq!(queue_rx.next(), src.next());
+
+        sink.stop();
+
+        assert!(sink.controls.stopped.load(Ordering::SeqCst));
+        assert_eq!(queue_rx.next(), Some(0.0));
+
+        src = SamplesBuffer::new(1, 1, v.clone()).convert_samples();
+        sink.append(SamplesBuffer::new(1, 1, v));
+
+        assert!(!sink.controls.stopped.load(Ordering::SeqCst));
+        // Flush silence
+        let mut queue_rx = queue_rx.skip_while(|v| *v == 0.0);
+
+        assert_eq!(queue_rx.next(), src.next());
+        assert_eq!(queue_rx.next(), src.next());
     }
 
     #[test]

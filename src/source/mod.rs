@@ -2,6 +2,8 @@
 
 use std::time::Duration;
 
+use cpal::FromSample;
+
 use crate::Sample;
 
 pub use self::amplify::Amplify;
@@ -161,6 +163,7 @@ where
     fn mix<S>(self, other: S) -> Mix<Self, S>
     where
         Self: Sized,
+        Self::Item: FromSample<S::Item>,
         S: Source,
         S::Item: Sample,
     {
@@ -227,6 +230,7 @@ where
     fn take_crossfade_with<S: Source>(self, other: S, duration: Duration) -> Crossfade<Self, S>
     where
         Self: Sized,
+        Self::Item: FromSample<S::Item>,
         <S as Iterator>::Item: Sample,
     {
         crossfade::crossfade(self, other, duration)
