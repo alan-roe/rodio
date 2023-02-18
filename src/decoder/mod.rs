@@ -424,7 +424,7 @@ where
                 #[cfg(all(feature = "wav", not(feature = "symphonia-wav")))]
                 DecoderImpl::Wav(source) => {
                     let mut reader = source.into_inner();
-                    reader.seek(SeekFrom::Start(0)).ok()?;
+                    reader.rewind().ok()?;
                     let mut source = wav::WavDecoder::new(reader).ok()?;
                     let sample = source.next();
                     (DecoderImpl::Wav(source), sample)
@@ -458,7 +458,7 @@ where
                 #[cfg(feature = "symphonia")]
                 DecoderImpl::Symphonia(source) => {
                     let mut reader = Box::new(source).into_inner();
-                    reader.seek(SeekFrom::Start(0)).ok()?;
+                    reader.rewind().ok()?;
                     let mut source = symphonia::SymphoniaDecoder::new(reader, None).ok()?;
                     let sample = source.next();
                     (DecoderImpl::Symphonia(source), sample)
