@@ -33,6 +33,8 @@ where
         sample_count: 0,
         still_pending: vec![],
         still_current: vec![],
+        volume: Arc::new(Mutex::new(vec![])),
+        src_count: 0
     };
 
     (input, output)
@@ -81,6 +83,11 @@ pub struct DynamicMixer<S> {
 
     // A temporary vec used in sum_current_sources.
     still_current: Vec<Box<dyn Source<Item = S> + Send>>,
+
+    pub volume: Arc<Mutex<Vec<f32>>>,
+
+    src_count: usize
+
 }
 
 impl<S> Source for DynamicMixer<S>
@@ -106,8 +113,41 @@ where
     fn total_duration(&self) -> Option<Duration> {
         None
     }
-    fn seek(&mut self, time: Duration) -> Result<Duration, ()> {
-        self.current_sources[0].seek(time)
+    fn seek(&mut self) -> f32 {
+        if let Some(source) =
+            self.current_sources.iter_mut().reduce(
+                |acc, x| {
+                    if x.seek() > acc.seek() {
+                        x
+                    } else {
+                        acc
+                    }
+                },
+            )
+        {
+            source.seek()
+        } else {
+            0.0
+        }
+    }
+
+    fn set_seek(&mut self, time: Duration) -> Result<Duration, ()> {
+        if let Some(next) = self
+            .current_sources
+            .iter_mut()
+            .flat_map(|source| {
+                if let Ok(ret) = source.set_seek(time) {
+                    Some(ret)
+                } else {
+                    None
+                }
+            })
+            .max()
+        {
+            Ok(next)
+        } else {
+            Err(())
+        }
     }
 }
 
@@ -150,7 +190,12 @@ where
     // sound will play on the wrong channels, e.g. left / right will be reversed.
     fn start_pending_sources(&mut self) {
         let mut pending = self.input.pending_sources.lock().unwrap(); // TODO: relax ordering?
+        self.src_count = pending.len();
+        let volume = self.volume.clone();
 
+        for _ in 0..self.src_count {
+            volume.lock().unwrap().push(1.0);
+        }
         for source in pending.drain(..) {
             let in_step = self.sample_count % source.channels() as usize == 0;
 
@@ -169,9 +214,17 @@ where
     fn sum_current_sources(&mut self) -> S {
         let mut sum = S::zero_value();
 
-        for mut source in self.current_sources.drain(..) {
+        let volume = self.volume.clone();
+        let volume = volume.lock().unwrap();
+        for (i, mut source) in self.current_sources.drain(..).enumerate() {
             if let Some(value) = source.next() {
+                let mut new_factor = volume[i];
+                    if new_factor < 0.0001 {
+                        new_factor = 0.0001;
+                    }
+                
                 sum = sum.saturating_add(value);
+                sum = sum.amplify(new_factor);
                 self.still_current.push(source);
             }
         }

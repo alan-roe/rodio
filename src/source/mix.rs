@@ -118,8 +118,12 @@ where
             _ => None,
         }
     }
-    fn seek(&mut self, time: Duration) -> Result<Duration, ()> {
-        self.input1.seek(time).unwrap();
-        self.input2.seek(time)
+    fn seek(&mut self) -> f32 {
+        todo!()
+    }
+
+    fn set_seek(&mut self, time: Duration) -> Result<Duration, ()> {
+        self.input1.set_seek(time).unwrap();
+        self.input2.set_seek(time)
     }
 }

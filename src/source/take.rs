@@ -120,7 +120,7 @@ where
             None
         } else if let Some(sample) = self.input.next() {
             let sample = match &self.filter {
-                Some(filter) => filter.apply(sample, &self),
+                Some(filter) => filter.apply(sample, self),
                 None => sample,
             };
 
@@ -166,18 +166,14 @@ where
 
     #[inline]
     fn total_duration(&self) -> Option<Duration> {
-        if let Some(duration) = self.input.total_duration() {
-            if duration < self.requested_duration {
-                Some(duration)
-            } else {
-                Some(self.requested_duration)
-            }
-        } else {
-            None
-        }
+        self.input.total_duration().filter(|&duration| duration < self.requested_duration)
     }
 
-    fn seek(&mut self, time: Duration) -> Result<Duration, ()> {
-        self.input.seek(time)
+    fn seek(&mut self) -> f32 {
+        todo!()
+    }
+
+    fn set_seek(&mut self, time: Duration) -> Result<Duration, ()> {
+        self.input.set_seek(time)
     }
 }

@@ -91,9 +91,13 @@ impl Source for SymphoniaDecoder {
         None
     }
 
-    fn seek(&mut self, time: Duration) -> Result<Duration, ()> {
+    fn seek(&mut self) -> f32 {
+        todo!()
+    }
+
+    fn set_seek(&mut self, time: Duration) -> Result<Duration, ()> {
         let nanos_per_sec = 1_000_000_000.0;
-        match self.format.seek(
+        match self.format.set_seek(
             SeekMode::Coarse,
             SeekTo::Time {
                 time: Time::new(time.as_secs(), time.subsec_nanos() as f64 / nanos_per_sec),

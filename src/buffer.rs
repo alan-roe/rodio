@@ -85,7 +85,11 @@ where
         Some(self.duration)
     }
 
-    fn seek(&mut self, seek_time: Duration) -> Result<Duration, ()> {
+    fn seek(&mut self) -> f32 {
+        todo!()
+    }
+
+    fn set_seek(&mut self, seek_time: Duration) -> Result<Duration, ()> {
         let iters = (self.sample_rate as f32 / 1000. * seek_time.as_millis() as f32).round() as u32;
         for i in 0..iters {
             self.data.next().ok_or(i).unwrap();

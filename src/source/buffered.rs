@@ -240,7 +240,11 @@ where
         self.total_duration
     }
 
-    fn seek(&mut self, time: Duration) -> Result<Duration, ()> {
+    fn seek(&mut self) -> f32 {
+        todo!()
+    }
+
+    fn set_seek(&mut self, time: Duration) -> Result<Duration, ()> {
         loop {
             match &*self.current_frame {
                 Frame::Data(FrameData { .. }) => {
@@ -253,7 +257,7 @@ where
 
                 Frame::Input(input) => {
                     let mut input = input.lock().unwrap().take().unwrap();
-                    return input.seek(time);
+                    return input.set_seek(time);
                 }
             };
         }

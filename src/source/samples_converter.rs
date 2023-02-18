@@ -95,7 +95,11 @@ where
     fn total_duration(&self) -> Option<Duration> {
         self.inner.total_duration()
     }
-    fn seek(&mut self, time: Duration) -> Result<Duration, ()> {
-        self.inner.seek(time)
+    fn seek(&mut self) -> f32 {
+        self.inner.seek()
+    }
+
+    fn set_seek(&mut self, time: Duration) -> Result<Duration, ()> {
+        self.inner.set_seek(time)
     }
 }

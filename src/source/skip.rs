@@ -48,7 +48,7 @@ where
             return;
         }
 
-        skip_samples(input, frame_len as usize);
+        skip_samples(input, frame_len);
 
         duration -= Duration::from_nanos((frame_len * ns_per_sample as usize) as u64);
     }
@@ -158,8 +158,12 @@ where
         })
     }
 
-    fn seek(&mut self, time: Duration) -> Result<Duration, ()> {
-        self.input.seek(time)
+    fn seek(&mut self) -> f32 {
+        todo!()
+    }
+
+    fn set_seek(&mut self, time: Duration) -> Result<Duration, ()> {
+        self.input.set_seek(time)
     }
 }
 

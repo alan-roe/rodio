@@ -28,7 +28,8 @@ struct Controls {
     volume: Mutex<f32>,
     stopped: AtomicBool,
     speed: Mutex<f32>,
-    seek: Mutex<Option<Duration>>,
+    set_seek: Mutex<Option<Duration>>,
+    seek: Mutex<f32>,
 }
 
 impl Sink {
@@ -53,7 +54,8 @@ impl Sink {
                 volume: Mutex::new(1.0),
                 stopped: AtomicBool::new(false),
                 speed: Mutex::new(1.0),
-                seek: Mutex::new(None),
+                set_seek: Mutex::new(None),
+                seek: Mutex::new(0.0),
             }),
             sound_count: Arc::new(AtomicUsize::new(0)),
             detached: false,
@@ -80,9 +82,11 @@ impl Sink {
                 if controls.stopped.load(Ordering::SeqCst) {
                     src.stop();
                 } else {
-                    if let Some(seek_time) = controls.seek.lock().unwrap().take() {
-                        src.seek(seek_time).unwrap();
+                    if let Some(seek_time) = controls.set_seek.lock().unwrap().take() {
+                        src.set_seek(seek_time).unwrap();
                     }
+                    *controls.seek.lock().unwrap() = src.seek();
+                    
                     // Workaround for buffer underrun issue
                     // If song is started while volume is set to 0, it causes a buffer underrun on alsa
                     let mut new_factor = *controls.volume.lock().unwrap();
@@ -161,8 +165,12 @@ impl Sink {
         self.controls.pause.store(true, Ordering::SeqCst);
     }
 
-    pub fn seek(&self, seek_time: Duration) {
-        *self.controls.seek.lock().unwrap() = Some(seek_time);
+    pub fn seek(&self) -> f32 {
+        *self.controls.seek.lock().unwrap()
+    }
+
+    pub fn set_seek(&self, seek_time: Duration) {
+        *self.controls.set_seek.lock().unwrap() = Some(seek_time);
     }
 
     /// Gets if a sink is paused
@@ -199,13 +207,17 @@ impl Sink {
     /// Returns true if this sink has no more sounds to play.
     #[inline]
     pub fn empty(&self) -> bool {
-        self.len() == 0
+        self.is_empty()
     }
 
     /// Returns the number of sounds currently in the queue.
     #[inline]
     pub fn len(&self) -> usize {
         self.sound_count.load(Ordering::Relaxed)
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
     }
 }
 
@@ -253,7 +265,7 @@ mod tests {
 
         assert_eq!(queue_rx.next(), Some(0.0));
 
-        assert_eq!(sink.empty(), true);
+        assert!(sink.empty());
     }
 
     #[test]

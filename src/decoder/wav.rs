@@ -129,7 +129,11 @@ where
         Some(self.total_duration)
     }
 
-    fn seek(&mut self, time: Duration) -> Result<Duration, ()> {
+    fn seek(&mut self) -> f32 {
+        self.reader.reader.samples_read as f32 / self.channels as f32 / self.sample_rate() as f32
+    }
+
+    fn set_seek(&mut self, time: Duration) -> Result<Duration, ()> {
         match self.reader.reader.seek(time.as_secs() as u32 * self.sample_rate) {
             Ok(()) => Ok(time),
             Err(_) => Err(()),
@@ -178,7 +182,7 @@ where
 /// audiable when actually playing?
 fn f32_to_i16(f: f32) -> i16 {
     // prefer to clip the input rather than be excessively loud.
-    (f.max(-1.0).min(1.0) * i16::max_value() as f32) as i16
+    (f.clamp(-1.0, 1.0) * i16::max_value() as f32) as i16
 }
 
 /// Returns an 8-bit WAV int as an i16. This scales the sample value by a factor

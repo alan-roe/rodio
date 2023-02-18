@@ -108,7 +108,7 @@ where
             match symphonia::SymphoniaDecoder::new(mss, None) {
                 Err(e) => Err(e),
                 Ok(decoder) => {
-                    return Ok(Decoder(DecoderImpl::Symphonia(decoder)));
+                    Ok(Decoder(DecoderImpl::Symphonia(decoder)))
                 }
             }
         }
@@ -195,7 +195,7 @@ where
         match symphonia::SymphoniaDecoder::new(mss, Some(hint)) {
             Err(e) => Err(e),
             Ok(decoder) => {
-                return Ok(Decoder(DecoderImpl::Symphonia(decoder)));
+                Ok(Decoder(DecoderImpl::Symphonia(decoder)))
             }
         }
     }
@@ -367,18 +367,30 @@ where
     }
 
     #[inline]
-    fn seek(&mut self, time: Duration) -> Result<Duration, ()> {
+    fn seek(&mut self) -> f32 {
         match &mut self.0 {
             #[cfg(all(feature = "wav", not(feature = "symphonia-wav")))]
-            DecoderImpl::Wav(source) => source.seek(time),
-            #[cfg(feature = "vorbis")]
-            DecoderImpl::Vorbis(source) => source.seek(time),
+            DecoderImpl::Wav(source) => source.seek(),
             #[cfg(all(feature = "flac", not(feature = "symphonia-flac")))]
-            DecoderImpl::Flac(source) => source.seek(time),
+            DecoderImpl::Flac(source) => source.seek(),
             #[cfg(all(feature = "mp3", not(feature = "symphonia-mp3")))]
-            DecoderImpl::Mp3(source) => source.seek(time),
+            DecoderImpl::Mp3(source) => source.seek(),
             #[cfg(feature = "symphonia")]
-            DecoderImpl::Symphonia(source) => source.seek(time),
+            DecoderImpl::Symphonia(source) => source.seek(),
+            DecoderImpl::None(_) => 0.0,
+        }
+    }
+
+    fn set_seek(&mut self, time: Duration) -> Result<Duration, ()> {
+        match &mut self.0 {
+            #[cfg(all(feature = "wav", not(feature = "symphonia-wav")))]
+            DecoderImpl::Wav(source) => source.set_seek(time),
+            #[cfg(all(feature = "flac", not(feature = "symphonia-flac")))]
+            DecoderImpl::Flac(source) => source.set_seek(time),
+            #[cfg(all(feature = "mp3", not(feature = "symphonia-mp3")))]
+            DecoderImpl::Mp3(source) => source.set_seek(time),
+            #[cfg(feature = "symphonia")]
+            DecoderImpl::Symphonia(source) => source.set_seek(time),
             DecoderImpl::None(_) => Ok(time),
         }
     }
@@ -421,7 +433,7 @@ where
                 DecoderImpl::Vorbis(source) => {
                     use lewton::inside_ogg::SeekableOggStreamReader;
                     let mut reader = source.into_inner().into_inner().into_inner();
-                    reader.seek_bytes(SeekFrom::Start(0)).ok()?;
+                    reader.set_seek_bytes(SeekFrom::Start(0)).ok()?;
                     let stream_reader = SeekableOggStreamReader::new(reader.into_inner()).ok()?;
                     let mut source = vorbis::VorbisDecoder::from_stream_reader(stream_reader);
                     let sample = source.next();
@@ -430,7 +442,7 @@ where
                 #[cfg(all(feature = "flac", not(feature = "symphonia-flac")))]
                 DecoderImpl::Flac(source) => {
                     let mut reader = source.into_inner();
-                    reader.seek(SeekFrom::Start(0)).ok()?;
+                    reader.set_seek(SeekFrom::Start(0)).ok()?;
                     let mut source = flac::FlacDecoder::new(reader).ok()?;
                     let sample = source.next();
                     (DecoderImpl::Flac(source), sample)
@@ -537,18 +549,20 @@ where
     }
 
     #[inline]
-    fn seek(&mut self, time: Duration) -> Result<Duration, ()> {
+    fn seek(&mut self) -> f32 {
+        todo!()
+    }
+
+    fn set_seek(&mut self, time: Duration) -> Result<Duration, ()> {
         match &mut self.0 {
             #[cfg(all(feature = "wav", not(feature = "symphonia-wav")))]
-            DecoderImpl::Wav(source) => source.seek(time),
-            #[cfg(feature = "vorbis")]
-            DecoderImpl::Vorbis(source) => source.seek(time),
+            DecoderImpl::Wav(source) => source.set_seek(time),
             #[cfg(all(feature = "flac", not(feature = "symphonia-flac")))]
-            DecoderImpl::Flac(source) => source.seek(time),
+            DecoderImpl::Flac(source) => source.set_seek(time),
             #[cfg(all(feature = "mp3", not(feature = "symphonia-mp3")))]
-            DecoderImpl::Mp3(source) => source.seek(time),
+            DecoderImpl::Mp3(source) => source.set_seek(time),
             #[cfg(feature = "symphonia")]
-            DecoderImpl::Symphonia(source) => source.seek(time),
+            DecoderImpl::Symphonia(source) => source.set_seek(time),
             DecoderImpl::None(_) => Ok(time),
         }
     }

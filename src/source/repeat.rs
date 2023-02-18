@@ -84,10 +84,14 @@ where
     fn total_duration(&self) -> Option<Duration> {
         None
     }
-    fn seek(&mut self, time: Duration) -> Result<Duration, ()> {
+    fn seek(&mut self) -> f32 {
+        todo!()
+    }
+
+    fn set_seek(&mut self, time: Duration) -> Result<Duration, ()> {
         match self.inner.current_frame_len() {
-            Some(0) => self.next.seek(time),
-            _ => self.inner.seek(time),
+            Some(0) => self.next.set_seek(time),
+            _ => self.inner.set_seek(time),
         }
     }
 }

@@ -8,7 +8,7 @@ fn main() {
     sink.append(rodio::Decoder::new(BufReader::new(file)).unwrap());
     let receiver = sink.get_current_receiver().unwrap();
     thread::sleep(Duration::from_secs(1));
-    sink.seek(Duration::from_secs(3));
+    sink.set_seek(Duration::from_secs(3));
 
     receiver.recv().unwrap();
 }

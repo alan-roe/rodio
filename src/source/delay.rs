@@ -105,7 +105,11 @@ where
             .total_duration()
             .map(|val| val + self.requested_duration)
     }
-    fn seek(&mut self, time: Duration) -> Result<Duration, ()> {
-        self.input.seek(time)
+    fn seek(&mut self) -> f32 {
+        todo!()
+    }
+
+    fn set_seek(&mut self, time: Duration) -> Result<Duration, ()> {
+        self.input.set_seek(time)
     }
 }

@@ -144,7 +144,8 @@ where
     /// `None` indicates at the same time "infinite" or "unknown".
     fn total_duration(&self) -> Option<Duration>;
 
-    fn seek(&mut self, time: Duration) -> Result<Duration, ()>;
+    fn seek(&mut self) -> f32;
+    fn set_seek(&mut self, time: Duration) -> Result<Duration, ()>;
 
     /// Stores the source in a buffer in addition to returning it. This iterator can be cloned.
     #[inline]
@@ -363,8 +364,12 @@ where
     fn total_duration(&self) -> Option<Duration> {
         (**self).total_duration()
     }
-    fn seek(&mut self, time: Duration) -> Result<Duration, ()> {
-        (**self).seek(time)
+    fn seek(&mut self) -> f32 {
+        todo!()
+    }
+
+    fn set_seek(&mut self, time: Duration) -> Result<Duration, ()> {
+        (**self).set_seek(time)
     }
 }
 
@@ -392,8 +397,12 @@ where
         (**self).total_duration()
     }
 
-    fn seek(&mut self, time: Duration) -> Result<Duration, ()> {
-        (**self).seek(time)
+    fn seek(&mut self) -> f32 {
+        (**self).seek()
+    }
+
+    fn set_seek(&mut self, time: Duration) -> Result<Duration, ()> {
+        (**self).set_seek(time)
     }
 }
 
@@ -421,7 +430,11 @@ where
         (**self).total_duration()
     }
 
-    fn seek(&mut self, time: Duration) -> Result<Duration, ()> {
-        (**self).seek(time)
+    fn seek(&mut self) -> f32 {
+        todo!()
+    }
+
+    fn set_seek(&mut self, time: Duration) -> Result<Duration, ()> {
+        (**self).set_seek(time)
     }
 }

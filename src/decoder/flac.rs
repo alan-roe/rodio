@@ -79,7 +79,11 @@ where
         self.samples
             .map(|s| Duration::from_micros(s * 1_000_000 / self.sample_rate as u64))
     }
-    fn seek(&mut self, _: Duration) -> Result<Duration, ()> {
+    fn seek(&mut self) -> f32 {
+        todo!()
+    }
+
+    fn set_seek(&mut self, _: Duration) -> Result<Duration, ()> {
         Err(())
     }
 }

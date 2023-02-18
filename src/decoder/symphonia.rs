@@ -8,7 +8,7 @@ use symphonia::{
         io::MediaSourceStream,
         meta::MetadataOptions,
         probe::Hint,
-        units::{self, Time, TimeBase},
+        units::{Time, TimeBase},
     },
     default::get_probe,
 };
@@ -48,7 +48,7 @@ impl SymphoniaDecoder {
         }
     }
 
-    pub fn into_inner(self: Box<Self>) -> MediaSourceStream {
+    pub fn into_inner(self) -> MediaSourceStream {
         self.format.into_inner()
     }
 
@@ -76,7 +76,6 @@ impl SymphoniaDecoder {
             &stream.codec_params,
             &DecoderOptions {
                 verify: true,
-                ..Default::default()
             },
         )?;
 
@@ -101,21 +100,21 @@ impl SymphoniaDecoder {
         let spec = decoded.spec().to_owned();
         let buffer = SymphoniaDecoder::get_buffer(decoded, &spec);
 
-        return Ok(Some(SymphoniaDecoder {
+        Ok(Some(SymphoniaDecoder {
             decoder,
             current_frame_offset: 0,
             format: probed.format,
             buffer,
             spec,
-        }));
+        }))
     }
 
     #[inline]
     fn get_buffer(decoded: AudioBufferRef, spec: &SignalSpec) -> SampleBuffer<i16> {
-        let duration = units::Duration::from(decoded.capacity() as u64);
-        let mut buffer = SampleBuffer::<i16>::new(duration, spec.clone());
+        let duration = decoded.capacity() as u64;
+        let mut buffer = SampleBuffer::<i16>::new(duration, *spec);
         buffer.copy_interleaved_ref(decoded);
-        return buffer;
+        buffer
     }
 }
 
@@ -141,7 +140,11 @@ impl Source for SymphoniaDecoder {
     }
 
     #[inline]
-    fn seek(&mut self, time: Duration) -> Result<Duration, ()> {
+    fn seek(&mut self) -> f32 {
+        todo!()
+    }
+
+    fn set_seek(&mut self, time: Duration) -> Result<Duration, ()> {
         let nanos_per_sec = 1_000_000_000.0;
         match self.format.seek(
             SeekMode::Coarse,
@@ -158,7 +161,7 @@ impl Source for SymphoniaDecoder {
                     time.seconds * 1000 + ((time.frac * 60. * 1000.).round() as u64),
                 ))
             }
-            Err(_) => return Err(()),
+            Err(_) => Err(()),
         }
     }
 }

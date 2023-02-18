@@ -104,7 +104,11 @@ where
         }
     }
 
-    fn seek(&mut self, time: Duration) -> Result<Duration, ()> {
-        self.input.seek(time)
+    fn seek(&mut self) -> f32 {
+        self.input.seek()
+    }
+
+    fn set_seek(&mut self, time: Duration) -> Result<Duration, ()> {
+        self.input.set_seek(time)
     }
 }

@@ -136,9 +136,13 @@ where
         None
     }
 
-    fn seek(&mut self, time: Duration) -> Result<Duration, ()> {
+    fn seek(&mut self) -> f32 {
+        todo!()
+    }
+
+    fn set_seek(&mut self, time: Duration) -> Result<Duration, ()> {
         if let Some(src) = &mut self.current_source {
-            src.seek(time)
+            src.set_seek(time)
         } else {
             Ok(time)
         }

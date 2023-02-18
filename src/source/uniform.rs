@@ -136,7 +136,7 @@ where
         self.total_duration
     }
 
-    fn seek(&mut self, time: Duration) -> Result<Duration, ()> {
+    fn seek(&mut self) -> f32 {
         let mut input = self
             .inner
             .take()
@@ -145,12 +145,29 @@ where
             .into_inner()
             .into_inner()
             .iter;
-        let ret = input.seek(time);
+        let ret = input.seek();
         let input =
             UniformSourceIterator::bootstrap(input, self.target_channels, self.target_sample_rate);
 
         self.inner = Some(input);
-        return ret;
+        ret
+    }
+
+    fn set_seek(&mut self, time: Duration) -> Result<Duration, ()> {
+        let mut input = self
+            .inner
+            .take()
+            .unwrap()
+            .into_inner()
+            .into_inner()
+            .into_inner()
+            .iter;
+        let ret = input.set_seek(time);
+        let input =
+            UniformSourceIterator::bootstrap(input, self.target_channels, self.target_sample_rate);
+
+        self.inner = Some(input);
+        ret
     }
 }
 

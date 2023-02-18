@@ -95,10 +95,14 @@ where
         None
     }
 
-    fn seek(&mut self, time: Duration) -> Result<Duration, ()> {
+    fn seek(&mut self) -> f32 {
+        todo!()
+    }
+
+    fn set_seek(&mut self, time: Duration) -> Result<Duration, ()> {
         match self
             .stream_reader
-            .seek_absgp(time.as_secs() * self.sample_rate() as u64)
+            .set_seek_absgp(time.as_secs() * self.sample_rate() as u64)
         {
             Ok(()) => Ok(time),
             Err(_) => Err(()),
@@ -136,13 +140,13 @@ fn is_vorbis<R>(mut data: R) -> bool
 where
     R: Read + Seek,
 {
-    let stream_pos = data.seek(SeekFrom::Current(0)).unwrap();
+    let stream_pos = data.set_seek(SeekFrom::Current(0)).unwrap();
 
     if ogg_metadata::read_format(&mut data).is_err() {
-        data.seek(SeekFrom::Start(stream_pos)).unwrap();
+        data.set_seek(SeekFrom::Start(stream_pos)).unwrap();
         return false;
     }
 
-    data.seek(SeekFrom::Start(stream_pos)).unwrap();
+    data.set_seek(SeekFrom::Start(stream_pos)).unwrap();
     true
 }

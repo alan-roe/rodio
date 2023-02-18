@@ -61,7 +61,11 @@ where
     }
 
     #[inline]
-    fn seek(&mut self, _: Duration) -> Result<Duration, ()> {
+    fn seek(&mut self) -> f32 {
+        todo!()
+    }
+
+    fn set_seek(&mut self, _: Duration) -> Result<Duration, ()> {
         Err(())
     }
 }

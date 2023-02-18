@@ -1,6 +1,5 @@
-use std::{io::BufReader, thread, time::Duration};
+use std::{io::BufReader};
 
-use rodio::Source;
 
 fn main() {
     let (_stream, handle) = rodio::OutputStream::try_default().unwrap();

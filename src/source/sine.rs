@@ -17,7 +17,7 @@ impl SineWave {
     #[inline]
     pub fn new(freq: f32) -> SineWave {
         SineWave {
-            freq: freq,
+            freq,
             num_sample: 0,
         }
     }
@@ -56,7 +56,11 @@ impl Source for SineWave {
         None
     }
 
-    fn seek(&mut self, time: Duration) -> Result<Duration, ()> {
+    fn seek(&mut self) -> f32 {
+        todo!()
+    }
+
+    fn set_seek(&mut self, time: Duration) -> Result<Duration, ()> {
         Ok(time)
     }
 }
